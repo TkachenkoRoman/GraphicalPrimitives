@@ -1,0 +1,9 @@
+D:\ComputerGraphics\graphics1\graphics1\bin\Debug\graphics1.exe.config
+D:\ComputerGraphics\graphics1\graphics1\bin\Debug\graphics1.exe
+D:\ComputerGraphics\graphics1\graphics1\bin\Debug\graphics1.pdb
+D:\ComputerGraphics\graphics1\graphics1\obj\Debug\graphics1.csprojResolveAssemblyReference.cache
+D:\ComputerGraphics\graphics1\graphics1\obj\Debug\graphics1.Form1.resources
+D:\ComputerGraphics\graphics1\graphics1\obj\Debug\graphics1.Properties.Resources.resources
+D:\ComputerGraphics\graphics1\graphics1\obj\Debug\graphics1.csproj.GenerateResource.Cache
+D:\ComputerGraphics\graphics1\graphics1\obj\Debug\graphics1.exe
+D:\ComputerGraphics\graphics1\graphics1\obj\Debug\graphics1.pdb
