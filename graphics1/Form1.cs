@@ -19,7 +19,7 @@ namespace graphics1
 
         private Graphics g = null;
         private int pixelSize = 5;
-        void PutPixel(Graphics g, int x, int y, int size, Color c)
+        void PutPixel(Graphics g, int x, int y, int size, Color c, int alpha = 255)
         {
             //Bitmap bm = new Bitmap(size, size);
             //for (int i = 0; i < size; i++)
@@ -27,7 +27,7 @@ namespace graphics1
             //        bm.SetPixel(i, j, c);
             //g.DrawImageUnscaled(bm, x, y);
 
-            SolidBrush myBrush = new SolidBrush(c);
+            SolidBrush myBrush = new SolidBrush(Color.FromArgb(alpha,c));
             g.FillRectangle(myBrush, new Rectangle(new Point() { X = x, Y = y }, new Size() {  Width = size, Height = size }));
         }
 
@@ -43,9 +43,11 @@ namespace graphics1
                 DDALine(g, 0, 0, 100, 60, pixelSize, Color.Black);
                 NonSymDDALine(g, 30, 0, 130, 60, pixelSize, Color.Red);
                 BrezengamLine(g, 60, 0, 160, 60, pixelSize, Color.Blue);
-                BresenhamCircle(g, 150, 200, 50, pixelSize, Color.Green);
-                BresenhamCircle(g, 150, 200, 30, pixelSize, Color.Green);
-                BresenhamCircle(g, 150, 200, 10, pixelSize, Color.Green);
+                BresenhamCircle(g, 100, 60, 50, pixelSize, Color.Green);
+                BresenhamCircle(g, 20, 20, 30, pixelSize, Color.Green);
+                BresenhamCircle(g, 20, 20, 10, pixelSize, Color.Green);
+                BresenhamEllipse(g, 50, 90, 50, 20, pixelSize, Color.Indigo);
+                DrawWuLine(g, Color.Gold, 90, 0, 190, 60, pixelSize);
             }
         }
 
@@ -73,6 +75,8 @@ namespace graphics1
                 L = Math.Abs(y2 - y1);
             }
 
+            double dx = (x2 - x1) / L;
+            double dy = (y2 - y1) / L;
             double x = x1;
             double y = y1;
 
@@ -81,13 +85,11 @@ namespace graphics1
             {
                 if (x1 != x2)
                 {
-                    double dx = (x2 - x1) / L;
                     x = x + dx;
                 }
 
                 if (y1 != y2)
                 {
-                    double dy = (y2 - y1) / L;
                     y = y + dy;
                 }
                 PutPixel(g, RoundToPixelSize(x, size), RoundToPixelSize(y, size), size, col);
@@ -190,6 +192,8 @@ namespace graphics1
 
         private void BresenhamCircle(Graphics g, int x0, int y0, int radius, int size, Color col)
         {
+            x0 *= size;
+            y0 *= size;
             int x = radius * size;
             int y = 0;
             int radiusError = size - x;
@@ -215,5 +219,144 @@ namespace graphics1
                 }
             }
         }
+
+        private void BresenhamEllipse(Graphics g, int xc, int yc, int width, int height, int size, Color col)
+        {
+            xc *= size;
+            yc *= size;
+            width *= size;
+            height *= size;
+
+
+            int a2 = width * width;
+            int b2 = height * height;
+            int fa2 = 4 * a2, fb2 = 4 * b2;
+            int x, y, sigma;
+
+            /* first half */
+            for (x = 0, y = height, sigma = 2 * b2 + a2 * (size - 2 * height); b2 * x <= a2 * y; x+=size)
+            {
+                PutPixel(g, RoundToPixelSize(xc + x, size), RoundToPixelSize(yc + y, size), size, col);
+                PutPixel(g, RoundToPixelSize(xc - x, size), RoundToPixelSize(yc + y, size), size, col);
+                PutPixel(g, RoundToPixelSize(xc + x, size), RoundToPixelSize(yc - y, size), size, col);
+                PutPixel(g, RoundToPixelSize(xc - x, size), RoundToPixelSize(yc - y, size), size, col);
+
+                if (sigma >= 0)
+                {
+                    sigma += fa2 * (size - y);
+                    y -= size;
+                }
+                sigma += b2 * ((4 * x) + 6 * size);
+            }
+
+            /* second half */
+            for (x = width, y = 0, sigma = 2 * a2 + b2 * (size - 2 * width); a2 * y <= b2 * x; y+=size)
+            {
+
+                PutPixel(g, RoundToPixelSize(xc + x, size), RoundToPixelSize(yc + y, size), size, col);
+                PutPixel(g, RoundToPixelSize(xc - x, size), RoundToPixelSize(yc + y, size), size, col);
+                PutPixel(g, RoundToPixelSize(xc + x, size), RoundToPixelSize(yc - y, size), size, col);
+                PutPixel(g, RoundToPixelSize(xc - x, size), RoundToPixelSize(yc - y, size), size, col);
+
+                if (sigma >= 0)
+                {
+                    sigma += fb2 * (size - x);
+                    x -= size;
+                }
+                sigma += a2 * ((4 * y) + 6 * size);
+            }
+        }
+
+
+
+        public void DrawWuLine(Graphics g, Color clr, int x0, int y0, int x1, int y1, int size)
+        {
+            x0 *= size;
+            y0 *= size;
+            x1 *= size;
+            y1 *= size;
+            //Вычисление изменения координат
+            int dx = (x1 > x0) ? (x1 - x0) : (x0 - x1);
+            int dy = (y1 > y0) ? (y1 - y0) : (y0 - y1);
+            //Если линия параллельна одной из осей, рисуем обычную линию - заполняем все пикселы в ряд
+            if (dx == 0 || dy == 0)
+            {
+                g.DrawLine(new Pen(clr), x0, y0, x1, y1);
+                return;
+            }
+
+            //Для Х-линии (коэффициент наклона < 1)
+            if (dy < dx)
+            {
+                //Первая точка должна иметь меньшую координату Х
+                if (x1 < x0)
+                {
+                    x1 += x0; x0 = x1 - x0; x1 -= x0;
+                    y1 += y0; y0 = y1 - y0; y1 -= y0;
+                }
+                //Относительное изменение координаты Y
+                float grad = (float)dy / dx;
+                //Промежуточная переменная для Y
+                float intery = y0 + grad;
+                //Первая точка
+                PutPixel(g, RoundToPixelSize(x0, size), RoundToPixelSize(y0, size), size, clr);
+
+                for (int x = x0 + 1; x < x1; x++)
+                {
+                    //Верхняя точка
+                    PutPixel(g, RoundToPixelSize(x, size), RoundToPixelSize(IPart(intery), size), size, clr, (int)(255 - FPart(intery) * 255));
+                    //PutPixel(g, clr, x, IPart(intery), (int)(255 - FPart(intery) * 255));
+                    //Нижняя точка
+                    PutPixel(g, RoundToPixelSize(x, size), RoundToPixelSize(IPart(intery) + 1, size), size, clr, (int)(FPart(intery) * 255));
+                    //PutPixel(g, clr, x, IPart(intery) + 1, (int)(FPart(intery) * 255));
+                    //Изменение координаты Y
+                    intery += grad;
+                }
+                //Последняя точка
+                PutPixel(g, RoundToPixelSize(x1, size), RoundToPixelSize(y1, size), size, clr);
+            }
+            //Для Y-линии (коэффициент наклона > 1)
+            else
+            {
+                //Первая точка должна иметь меньшую координату Y
+                if (y1 < y0)
+                {
+                    x1 += x0; x0 = x1 - x0; x1 -= x0;
+                    y1 += y0; y0 = y1 - y0; y1 -= y0;
+                }
+                //Относительное изменение координаты X
+                float grad = (float)dx / dy;
+                //Промежуточная переменная для X
+                float interx = x0 + grad;
+                //Первая точка
+                PutPixel(g, RoundToPixelSize(x0, size), RoundToPixelSize(y0, size), size, clr);
+
+                for (int y = y0 + 1; y < y1; y++)
+                {
+                    //Верхняя точка
+                    PutPixel(g, RoundToPixelSize(y, size), RoundToPixelSize(IPart(interx), size), size, clr, (int)(255 - FPart(interx) * 255));
+                    //Нижняя точка
+                    PutPixel(g, RoundToPixelSize(y, size), RoundToPixelSize(IPart(interx) + 1, size), size, clr, (int)(FPart(interx) * 255));
+                    //Изменение координаты X
+                    interx += grad;
+                }
+                //Последняя точка
+                PutPixel(g, RoundToPixelSize(x1, size), RoundToPixelSize(y1, size), size, clr);
+            }
+        }
+        //Целая часть числа
+        private  int IPart(float x)
+        {
+            return (int)x;
+        }
+        //дробная часть числа
+        private  float FPart(float x)
+        {
+            while (x >= 0)
+                x--;
+            x++;
+            return x;
+        }
+
     }
 }
